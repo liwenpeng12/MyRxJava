@@ -16,20 +16,32 @@ import com.liwenpeng.myrxjava.Api.UserExtraInfoRequest;
 import com.liwenpeng.myrxjava.Api.UserExtraInfoResponse;
 import com.liwenpeng.myrxjava.Api.UserInfo;
 
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
+
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
+import io.reactivex.BackpressureOverflowStrategy;
+import io.reactivex.BackpressureStrategy;
+import io.reactivex.Flowable;
+import io.reactivex.FlowableEmitter;
+import io.reactivex.FlowableOnSubscribe;
+import io.reactivex.FlowableSubscriber;
 import io.reactivex.Observable;
 import io.reactivex.ObservableEmitter;
 import io.reactivex.ObservableOnSubscribe;
 import io.reactivex.ObservableSource;
 import io.reactivex.Observer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.annotations.BackpressureKind;
+import io.reactivex.annotations.BackpressureSupport;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.BiFunction;
 import io.reactivex.functions.Consumer;
 import io.reactivex.functions.Function;
 import io.reactivex.functions.Predicate;
+import io.reactivex.internal.util.BackpressureHelper;
 import io.reactivex.schedulers.Schedulers;
 import okhttp3.OkHttpClient;
 import retrofit2.Retrofit;
@@ -61,13 +73,121 @@ public class MainActivity extends AppCompatActivity {
         //第六章
        // Chapter_06();
 
-        Chapter_07();
+        //第七章 :flowable
+       // Chapter_07();
+
+        //第八章
+     //   Chapter_08();
+
+        //第九章
+        Chapter_09();
+    }
+
+    private void Chapter_09() {
+        Flowable.create(new FlowableOnSubscribe<Integer>() {
+            @Override
+            public void subscribe(FlowableEmitter<Integer> emitter) throws Exception {
+                Log.d(LOGTAG,"发送 1 onNext");
+                emitter.onNext(1);
+                Log.d(LOGTAG,"发送 2 onNext");
+                emitter.onNext(2);
+                Log.d(LOGTAG,"发送 3 onNext");
+                emitter.onNext(3);
+                Log.d(LOGTAG,"发送  onComplete");
+                emitter.onComplete();
+            }
+        },BackpressureStrategy.ERROR).subscribe(new FlowableSubscriber<Integer>() {
+            @Override
+            public void onSubscribe(Subscription s) {
+                Log.d(LOGTAG,"onSubscribe");
+                s.request(2);
+            }
+
+            @Override
+            public void onNext(Integer integer) {
+                Log.d(LOGTAG,"收到onNext:"+integer);
+
+            }
+
+            @Override
+            public void onError(Throwable t) {
+
+            }
+
+            @Override
+            public void onComplete() {
+                Log.d(LOGTAG,"收到onComplete");
+            }
+        });
+
+
+    }
+
+    private void Chapter_08() {
+
     }
 
     /**
      *
      * */
     private void Chapter_07() {
+    DoRXjava_07_01();
+   // DoRXjava_07_02();
+    }
+
+    private void DoRXjava_07_02() {
+        Flowable.create(new FlowableOnSubscribe<Integer>()
+        { @Override public void subscribe(FlowableEmitter<Integer> emitter) throws Exception { Log.d(LOGTAG, "emit 1"); emitter.onNext(1);
+        Log.d(LOGTAG, "emit 2"); emitter.onNext(2); Log.d(LOGTAG, "emit 3"); emitter.onNext(3); Log.d(LOGTAG, "emit complete");
+        emitter.onComplete(); } }, BackpressureStrategy.ERROR).subscribe(new Subscriber<Integer>() { @Override public void onSubscribe(Subscription s)
+        { Log.d(LOGTAG, "onSubscribe"); } @Override public void onNext(Integer integer) { Log.d(LOGTAG, "onNext: " + integer); }
+        @Override public void onError(Throwable t) { Log.w(LOGTAG, "onError: ", t); } @Override public void onComplete() { Log.d(LOGTAG, "onComplete"); } });
+
+
+
+    }
+
+    //flowable的简单使用
+    private void DoRXjava_07_01() {
+        //被观察者
+        Flowable<Integer> integerFlowable = Flowable.create(new FlowableOnSubscribe<Integer>() {
+            @Override
+            public void subscribe(FlowableEmitter<Integer> emitter) throws Exception {
+                Log.d(LOGTAG,"emitter 1");
+                emitter.onNext(1);
+                Log.d(LOGTAG,"emitter 2");
+                emitter.onNext(2);
+                Log.d(LOGTAG,"emitter onComplete");
+                emitter.onComplete();
+            }
+        },BackpressureStrategy.ERROR);
+
+        //观察者
+        Subscriber<Integer> integerSubscriber = new Subscriber<Integer>() {
+            @Override
+            public void onSubscribe(Subscription s) {
+                s.request(2); //注意这行代码
+                Log.d(LOGTAG,"onSubscribe");
+            }
+
+            @Override
+            public void onNext(Integer integer) {
+                Log.d(LOGTAG, "integer:" + integer);
+            }
+
+            @Override
+            public void onError(Throwable t) {
+                Log.d(LOGTAG,"onError"+t.toString());
+            }
+
+            @Override
+            public void onComplete() {
+                Log.d(LOGTAG,"onComplete");
+            }
+        };
+
+        integerFlowable.subscribe(integerSubscriber);
+
 
     }
 
